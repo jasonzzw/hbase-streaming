@@ -49,6 +49,10 @@ public class JSONWriter extends TextWriter {
   public void writeString(CharSequence str) {
     JSONUtil.writeString(str,0,str.length(),out);
   }
+  
+  public void writeStringValue(CharSequence str) {
+	    JSONUtil.writeStringValue(str,0,str.length(),out);
+	  }
 
   public void writeString(CharArr str) {
     JSONUtil.writeString(str,out);

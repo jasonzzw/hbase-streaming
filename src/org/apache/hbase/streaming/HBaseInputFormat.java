@@ -23,7 +23,6 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hbase.streaming.json.JSONUtil;
 
-
 public class HBaseInputFormat implements InputFormat<Text, Text>,
 		JobConfigurable {
 
@@ -49,22 +48,22 @@ public class HBaseInputFormat implements InputFormat<Text, Text>,
 	public HBaseInputFormat() {
 		tableInputFormat = new TableInputFormat();
 	}
-	
-	private  String augmentCF(String columns) {
-		if (columns==null || columns=="" ){
-			if(omitcf) {
+
+	private String augmentCF(String columns) {
+		if (columns == null || columns == "") {
+			if (omitcf) {
 				return defaultCF;
-			}else{
+			} else {
 				return "";
 			}
-		}else{
-			List<String> list=new ArrayList<String>();
-			String[] cls=columns.split(" ");
-			for(String s:cls){
-				if(s!=""){
-					if(omitcf){
-						list.add(defaultCF+":"+s);
-					}else{
+		} else {
+			List<String> list = new ArrayList<String>();
+			String[] cls = columns.split(" ");
+			for (String s : cls) {
+				if (s != "") {
+					if (omitcf) {
+						list.add(defaultCF + ":" + s);
+					} else {
 						list.add(s);
 					}
 				}
@@ -72,30 +71,30 @@ public class HBaseInputFormat implements InputFormat<Text, Text>,
 			return StringUtils.join(" ", list);
 		}
 	}
-	
+
 	@Override
 	public void configure(JobConf job) {
 		// TODO Auto-generated method stub
 		withTimeStamp = argToBoolean(job.get(HAS_TIMESTAMP_KEY), false);
 		omitcf = argToBoolean(job.get(OMITCF_KEY), true);
-		
+
 		format = job.get(FORMAT_KEY);
 		if (format == null) {
 			format = DEFAULT_FORMAT;
 		} else if (format != "json" && format != "list") {
 			format = DEFAULT_FORMAT;
 		}
-		
-		separator=job.get(SEPARATOR_KEY);
-		if (separator==null){
-			separator=DEFAULT_SEPARATOR;
+
+		separator = job.get(SEPARATOR_KEY);
+		if (separator == null) {
+			separator = DEFAULT_SEPARATOR;
 		}
-		
-		defaultCF=job.get(DEFAULT_CF);
-		if (defaultCF==null) {
-			defaultCF=DEFAULT_CF;
+
+		defaultCF = job.get(DEFAULT_CF);
+		if (defaultCF == null) {
+			defaultCF = DEFAULT_CF;
 		}
-		
+
 		FileInputFormat.setInputPaths(job, job.get(TABLE_KEY));
 		job.set(TableInputFormat.COLUMN_LIST, augmentCF(job.get(COLUMNS_KEY)));
 		tableInputFormat.configure(job);
@@ -105,8 +104,8 @@ public class HBaseInputFormat implements InputFormat<Text, Text>,
 	public RecordReader<Text, Text> getRecordReader(InputSplit split,
 			JobConf job, Reporter reporter) throws IOException {
 		// TODO Auto-generated method stub
-		return new HBaseRecordReader(tableInputFormat.getRecordReader(split, job,
-				reporter));
+		return new HBaseRecordReader(tableInputFormat.getRecordReader(split,
+				job, reporter));
 	}
 
 	@Override
@@ -115,8 +114,6 @@ public class HBaseInputFormat implements InputFormat<Text, Text>,
 		// TODO Auto-generated method stub
 		return tableInputFormat.getSplits(job, numSplits);
 	}
-
-
 
 	private boolean argToBoolean(String arg, boolean deft) {
 		if (arg == null)
@@ -152,42 +149,60 @@ public class HBaseInputFormat implements InputFormat<Text, Text>,
 		public float getProgress() throws IOException {
 			return tableRecordReader.getProgress();
 		}
-		
-		private  String formatList(Result row) {
-			 StringBuilder values = new StringBuilder("");
-		        for (Cell cell : row.listCells()) {
-		            if (values.length() != 0)
-		                values.append(separator);
-		            values.append(new String(CellUtil.cloneValue(cell)));
-		        }
-		        return values.toString();
+
+		private String formatList(Result row) {
+			StringBuilder values = new StringBuilder("");
+			for (Cell cell : row.listCells()) {
+				if (values.length() != 0)
+					values.append(separator);
+				values.append(new String(CellUtil.cloneValue(cell)));
+			}
+			return values.toString();
 		}
-		
-	    private String encodeColumnName(byte[] family, byte[] qualifier) {
-	    	int resultSize =  family.length + 1 + qualifier.length;
-	    	ByteBuffer bb = ByteBuffer.allocate(resultSize);
-	    	
-	    	bb.put(family);
-	    	bb.put(":".getBytes());
-	    	bb.put(qualifier);
-	        return new String( bb.array()); 
-	    }
-	    
-		
-		private  String formatJson(Result row) {
-			Map<String, Map<String, String>> values = new HashMap<String, Map<String, String>>();
-	        for (Cell cell : row.listCells()) {
-	            Map<String, String> field = new HashMap<String, String>();
-	            field.put("value", new String(CellUtil.cloneValue(cell)));
-	            if(withTimeStamp)
-	            	field.put("timestamp", String.valueOf(cell.getTimestamp()));
-	            if (omitcf){
-	            	values.put(new String(CellUtil.cloneQualifier(cell)), field);
-	            }else{
-	            	values.put(encodeColumnName(CellUtil.cloneFamily(cell), CellUtil.cloneQualifier(cell)), field);
-	            }
-	        }
-	        return JSONUtil.toJSON(values);
+
+		private String encodeColumnName(byte[] family, byte[] qualifier) {
+			int resultSize = family.length + 1 + qualifier.length;
+			ByteBuffer bb = ByteBuffer.allocate(resultSize);
+
+			bb.put(family);
+			bb.put(":".getBytes());
+			bb.put(qualifier);
+			return new String(bb.array());
+		}
+
+		private String formatJson(Result row) {
+			//if with timestamp
+			if (withTimeStamp) {
+				Map<String, Map<String, String>> values = new HashMap<String, Map<String, String>>();
+				for (Cell cell : row.listCells()) {
+					Map<String, String> field = new HashMap<String, String>();
+					field.put("value", new String(CellUtil.cloneValue(cell)));
+					field.put("timestamp", String.valueOf(cell.getTimestamp()));
+					if (omitcf) {
+						values.put(new String(CellUtil.cloneQualifier(cell)),
+								field);
+					} else {
+						values.put(
+								encodeColumnName(CellUtil.cloneFamily(cell),
+										CellUtil.cloneQualifier(cell)), field);
+					}
+				}
+				return JSONUtil.toJSON(values);
+			} else {
+				Map<String, String> values = new HashMap<String, String>();
+				for (Cell cell : row.listCells()) {
+					if (omitcf) {
+						values.put(new String(CellUtil.cloneQualifier(cell)),
+								new String(CellUtil.cloneValue(cell)));
+					} else {
+						values.put(
+								encodeColumnName(CellUtil.cloneFamily(cell),
+										CellUtil.cloneQualifier(cell)),
+								new String(CellUtil.cloneValue(cell)));
+					}
+				}
+				return JSONUtil.toJSON(values);
+			}
 		}
 
 		public boolean next(Text key, Text value) throws IOException {
@@ -196,13 +211,13 @@ public class HBaseInputFormat implements InputFormat<Text, Text>,
 					new ImmutableBytesWritable(key.getBytes()), row);
 			if (hasNext) {
 				key.set(row.getRow());
-				if (format=="list") {
-					//if format is list
+				if (format == "list") {
+					// if format is list
 					value.set(formatList(row));
-				}else if (format=="json") {
+				} else if (format == "json") {
 					value.set(formatJson(row));
 				}
-				
+
 			}
 			return hasNext;
 		}

@@ -27,6 +27,7 @@ public abstract class TextWriter {
   public abstract void writeNull();
 
   public abstract void writeString(CharSequence str);
+  public abstract void writeStringValue(CharSequence str);
 
   public abstract void writeString(CharArr str);
 

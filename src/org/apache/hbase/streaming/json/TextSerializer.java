@@ -16,65 +16,66 @@
  */
 
 package org.apache.hbase.streaming.json;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.Collection;
 import java.util.Arrays;
 
 public class TextSerializer {
-  public void serialize(TextWriter writer, Map val) {
-    writer.startObject();
-    boolean first = true;
-    for (Map.Entry entry : (Set<Map.Entry>)val.entrySet()) {
-      if (first) {
-        first = false;
-      } else {
-        writer.writeValueSeparator();
-      }
-      writer.writeString(entry.getKey().toString());
-      writer.writeNameSeparator();
-      serialize(writer, entry.getValue());
-    }
-    writer.endObject();
-  }
+	public void serialize(TextWriter writer, Map val) {
+		writer.startObject();
+		boolean first = true;
+		for (Map.Entry entry : (Set<Map.Entry>) val.entrySet()) {
+			if (first) {
+				first = false;
+			} else {
+				writer.writeValueSeparator();
+			}
+			writer.writeString(entry.getKey().toString());
+			writer.writeNameSeparator();
+			serialize(writer, entry.getValue());
+		}
+		writer.endObject();
+	}
 
-  public void serialize(TextWriter writer, Collection val) {
-    writer.startArray();
-    boolean first = true;
-    for (Object o : val) {
-      if (first) {
-        first = false;
-      } else {
-        writer.writeValueSeparator();
-      }
-      serialize(writer, o);
-    }
-    writer.endArray();
-  }
+	public void serialize(TextWriter writer, Collection val) {
+		writer.startArray();
+		boolean first = true;
+		for (Object o : val) {
+			if (first) {
+				first = false;
+			} else {
+				writer.writeValueSeparator();
+			}
+			serialize(writer, o);
+		}
+		writer.endArray();
+	}
 
-  public void serialize(TextWriter writer, Object o) {
-    if (o == null) {
-      writer.writeNull();
-    } else if (o instanceof CharSequence) {
-      writer.writeString((CharSequence)o);
-    } else if (o instanceof Number) {
-      if (o instanceof Integer || o instanceof Long) {
-        writer.write(((Number)o).longValue());
-      } else if (o instanceof Float || o instanceof Double) {
-        writer.write(((Number)o).doubleValue());
-      } else {
-        CharArr arr = new CharArr();
-        arr.write(o.toString());
-        writer.writeNumber(arr);
-      }
-    } else if (o instanceof Map) {
-      this.serialize(writer, (Map)o);
-    } else if (o instanceof Collection) {
-      this.serialize(writer, (Collection)o);
-    } else if (o instanceof Object[]) {
-      this.serialize(writer, Arrays.asList(o));
-    } else {
-      writer.writeString(o.toString());
-    }
-  }
+	public void serialize(TextWriter writer, Object o) {
+		if (o == null) {
+			writer.writeNull();
+		} else if (o instanceof CharSequence) {
+			writer.writeStringValue((CharSequence)o);
+		} else if (o instanceof Number) {
+			if (o instanceof Integer || o instanceof Long) {
+				writer.write(((Number) o).longValue());
+			} else if (o instanceof Float || o instanceof Double) {
+				writer.write(((Number) o).doubleValue());
+			} else {
+				CharArr arr = new CharArr();
+				arr.write(o.toString());
+				writer.writeNumber(arr);
+			}
+		} else if (o instanceof Map) {
+			this.serialize(writer, (Map) o);
+		} else if (o instanceof Collection) {
+			this.serialize(writer, (Collection) o);
+		} else if (o instanceof Object[]) {
+			this.serialize(writer, Arrays.asList(o));
+		} else {
+			writer.writeString(o.toString());
+		}
+	}
 }
