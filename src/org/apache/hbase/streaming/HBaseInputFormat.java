@@ -2,6 +2,7 @@ package org.apache.hbase.streaming;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -155,7 +156,7 @@ public class HBaseInputFormat implements InputFormat<Text, Text>,
 			for (Cell cell : row.listCells()) {
 				if (values.length() != 0)
 					values.append(separator);
-				values.append(new String(CellUtil.cloneValue(cell)));
+				values.append(new String(CellUtil.cloneValue(cell), StandardCharsets.UTF_8));
 			}
 			return values.toString();
 		}
@@ -167,7 +168,7 @@ public class HBaseInputFormat implements InputFormat<Text, Text>,
 			bb.put(family);
 			bb.put(":".getBytes());
 			bb.put(qualifier);
-			return new String(bb.array());
+			return new String(bb.array(), StandardCharsets.UTF_8);
 		}
 
 		private String formatJson(Result row) {
@@ -176,10 +177,10 @@ public class HBaseInputFormat implements InputFormat<Text, Text>,
 				Map<String, Map<String, String>> values = new HashMap<String, Map<String, String>>();
 				for (Cell cell : row.listCells()) {
 					Map<String, String> field = new HashMap<String, String>();
-					field.put("value", new String(CellUtil.cloneValue(cell)));
+					field.put("value", new String(CellUtil.cloneValue(cell), StandardCharsets.UTF_8));
 					field.put("timestamp", String.valueOf(cell.getTimestamp()));
 					if (omitcf) {
-						values.put(new String(CellUtil.cloneQualifier(cell)),
+						values.put(new String(CellUtil.cloneQualifier(cell), StandardCharsets.UTF_8),
 								field);
 					} else {
 						values.put(
@@ -192,13 +193,13 @@ public class HBaseInputFormat implements InputFormat<Text, Text>,
 				Map<String, String> values = new HashMap<String, String>();
 				for (Cell cell : row.listCells()) {
 					if (omitcf) {
-						values.put(new String(CellUtil.cloneQualifier(cell)),
-								new String(CellUtil.cloneValue(cell)));
+						values.put(new String(CellUtil.cloneQualifier(cell), StandardCharsets.UTF_8),
+								new String(CellUtil.cloneValue(cell), StandardCharsets.UTF_8));
 					} else {
 						values.put(
 								encodeColumnName(CellUtil.cloneFamily(cell),
 										CellUtil.cloneQualifier(cell)),
-								new String(CellUtil.cloneValue(cell)));
+								new String(CellUtil.cloneValue(cell), StandardCharsets.UTF_8));
 					}
 				}
 				return JSONUtil.toJSON(values);
