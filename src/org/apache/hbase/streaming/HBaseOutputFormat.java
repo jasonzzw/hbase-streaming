@@ -122,7 +122,7 @@ public class HBaseOutputFormat implements OutputFormat<Text, Text>,
                Put p;
                try {
                    if (command.equals("put")) {
-                       p = new Put(args[0].getBytes());
+                       p = new Put(args[0].getBytes("UTF-8"));
                        if (!put(p, args)) {
                            throw new RuntimeException();
                        }
