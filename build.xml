@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<project name="hbase-streaming" default="jar">
+
+  <property environment="env"/>
+  <path id="classpath">
+    <pathelement location="classes"/>
+    <fileset dir="/opt/cloudera/parcels/CDH/jars">
+      <include name="**/*.jar" />
+    </fileset>
+  </path>
+
+  <target name="init">
+    <mkdir dir="classes"/>
+    <mkdir dir="build"/>
+  </target>
+
+  <target name="compile" depends="init">
+    <javac srcdir="src"
+           includes="**/*.java"
+           destdir="classes">
+      <classpath refid="classpath"/>
+      <compilerarg value="-Xlint:unchecked" />
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile">
+    <jar jarfile="build/hbase-streaming.jar" basedir="classes" />
+  </target>
+
+  <target name="clean">
+    <delete dir="build"/>
+    <delete dir="classes"/>
+  </target>
+
+</project>
